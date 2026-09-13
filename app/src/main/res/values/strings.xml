@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Graycie</string>
+    <string name="accessibility_service_label">Graycie</string>
+    <string name="accessibility_service_description">Detects which app is open to apply your grayscale policy. Reads only the focused app’s package name; never reads screen text, performs gestures, or sends data. You can disable this service at any time.</string>
+</resources>

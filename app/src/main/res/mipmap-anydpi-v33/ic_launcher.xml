@@ -1,0 +1,5 @@
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/graycie_launcher_background" />
+    <foreground android:drawable="@drawable/ic_graycie_a" />
+    <monochrome android:drawable="@drawable/ic_graycie_a" />
+</adaptive-icon>
