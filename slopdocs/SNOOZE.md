@@ -1,59 +1,43 @@
 # Auto-snooze compatibility
 
-## Motivation
+## What the feature does
 
-Some banking and security-sensitive apps reject any enabled accessibility service, even one that reads only foreground package metadata. Auto-snooze gives users an explicit, local compatibility list without changing their grayscale policy. When a listed app opens, Graycie restores color and removes its accessibility service while preserving the master configuration.
+Some banking and security-sensitive apps refuse to run while any Accessibility service is enabled. Auto-snooze gives users a separate, opt-in compatibility list. Opening a configured app can restore color and disable Graycie's service without turning off the user's grayscale configuration.
 
-## Two entry paths
+The grayscale and Auto-snooze selections are independent. Graycie and the active Home app cannot be selected for snoozing and cannot trigger it.
 
-Automatic detection handles `TYPE_WINDOW_STATE_CHANGED` before the normal classifier. It uses `AccessibilityService.disableSelf()` because this is Android's supported way for a service to remove itself without editing other services. Detection is inherently a race: a banking app may perform its check before Graycie receives the event.
+## Automatic snooze and Open safely
 
-Open safely avoids that race. It prepares recovery, restores color, removes only Graycie from the live secure enabled-services list, confirms removal, and then resolves and launches the target. A failed confirmation aborts launch.
+Automatic detection checks window-state events before normal foreground debouncing. If management is active, the package is selected, and recovery notifications are available, Graycie posts recovery, restores color, and calls Android's `disableSelf()` API. Detection is best-effort because the target app may check Accessibility before Graycie receives its event.
 
-## Recovery and user intent
+**Open safely** is the deterministic entry path. Graycie prepares recovery, restores color, removes only its own component from the current enabled-services setting, confirms that it is gone, and only then launches the selected app. If removal cannot be confirmed, the launch is aborted.
 
-Android does not provide a normal app API for silently enabling an accessibility service. This build assumes the user separately granted `WRITE_SECURE_SETTINGS` through ADB. Even with that grant, re-enable is performed only after the notification **Resume** action or the in-app Resume button. There is no timer and no foreground-based automatic resume.
+Once snoozing begins, duplicate events and service disconnect callbacks keep the same recovery state and do not repeat cleanup.
 
-The notification action is an immutable explicit broadcast `PendingIntent` to Graycie's private recovery receiver. It reads the current `ENABLED_ACCESSIBILITY_SERVICES` string and appends this component only if absent without opening `MainActivity`. It never writes a cached list and never removes, reorders, or reconstructs TalkBack or another service. A malformed list is retained byte-for-byte and treated as a recoverable failure. `ACCESSIBILITY_ENABLED` is set to `1`, then recovery remains pending until `onServiceConnected` confirms the bind. The notification body is a normal Graycie launch and never resumes implicitly.
+## Notification permission and recovery
 
-## Notification and failure behavior
+Recovery must be available before Graycie disables Accessibility. On Android 13 and newer, selecting the first Auto-snooze app requests notification permission; if permission is denied, that selection is not saved. Disabled app notifications or a disabled recovery channel prevent a new snooze and produce a warning.
 
-The low-importance `snooze_recovery` notification is ongoing and identifies the triggering app. Notifications are mandatory before starting a snooze. Android 13+ permission is requested on the first selection; denial does not persist that selection. Disabled app notifications or a disabled channel prevents accessibility from being disabled and stores a warning for the next app launch.
+While snoozed, an ongoing low-importance notification identifies the triggering app. Its **Resume** action targets a private broadcast receiver and works without opening the activity. Tapping the notification body only opens Graycie. The Home screen provides the same Resume action.
 
-Boot and package-replaced broadcasts repost recovery from persisted `snoozedForPackage`. The main screen duplicates the Resume action so delivery problems cannot strand the user. Provider refusal, malformed entries, lost secure-settings permission, or bind timeout keeps snooze and recovery intact and offers the existing Accessibility settings route. Color-cleanup failure is reported, but after recovery exists accessibility is still disabled for compatibility. Turning the master switch off clears recovery without re-enabling.
+Boot and package-replacement broadcasts restore the notification for a pending snooze.
 
-## Privacy, security, and OEM limits
+## Explicit resume
 
-Only the window event's package name is compared with the local set. No screen text, view nodes, gestures, screenshots, network traffic, analytics, or account data is involved. The accessibility configuration boundary recognizes and edits only `now.abhi.graycie.ForegroundAccessibilityService`; all unrelated tokens remain untouched. `isAccessibilityTool=false` remains declared.
+Resume is always user initiated; a timer or foreground-app change never starts it. Graycie reads the live enabled-services value and appends its component only if absent, preserving the order and spelling of every unrelated service. It then enables the global Accessibility switch and waits for `onServiceConnected` to confirm recovery.
 
-OEMs can delay window events, accessibility-list propagation, service binding, notifications, or launcher resolution. Those limitations make automatic detection best-effort and can require Open safely or manual Accessibility settings. Multi-user/work-profile support is outside the current scope.
+Snooze state and the notification clear only after that connection. A refused write, missing grant, malformed enabled-services value, or eight-second bind timeout leaves recovery available and directs the user toward Accessibility settings. A manual re-enable in Android settings is also accepted when the service reconnects.
 
-## State transitions
+Turning the master control off while snoozed cancels recovery and leaves Accessibility disabled.
+
+## Runtime states
 
 ```text
-DISABLED --master on + prerequisites--> ACTIVE
-ACTIVE --configured window / Open safely--> SNOOZING
-SNOOZING --recovery posted + access off--> SNOOZED
-SNOOZED --notification or in-app Resume--> RESUMING
-RESUMING --onServiceConnected--> ACTIVE
-RESUMING --write refusal / bind timeout--> SNOOZED
-SNOOZED --master off--> DISABLED (access stays off)
-ACTIVE --unexpected service removal--> DISABLED + color cleanup
+DISABLED -> ACTIVE -> SNOOZING -> SNOOZED -> RESUMING -> ACTIVE
 ```
 
-Only `managerEnabled`, both package selections, and `snoozedForPackage` are persisted. SNOOZING and RESUMING are transient projections.
+`SNOOZING` and `RESUMING` are transient progress states. The stable snoozed package is persisted so recovery survives activity and process restarts.
 
-## Manual checklist
+## Privacy and platform limits
 
-- Upgrade from 1.1.0 and verify policy/selection retention.
-- On API 26, 33, and target API, select a snooze app; deny and later grant notification permission on API 33+.
-- Disable notifications and the recovery channel independently; confirm no snooze begins.
-- Open a configured banking app normally and record whether automatic detection wins the app's check.
-- Use Open safely and confirm accessibility is absent before the banking activity appears.
-- Confirm TalkBack or a second service remains present and ordered after safe open and resume.
-- Resume from both notification and main screen; simulate secure-write refusal and bind timeout.
-- Re-enable manually in Accessibility settings and confirm recovery clears on connection.
-- Reboot and update the package while snoozed; confirm recovery is reposted.
-- Revoke notification and secure-settings permissions while configured and verify warnings.
-- Turn the master switch off while snoozed and confirm accessibility is not re-enabled.
-- Test narrow screens, 200% font scale, search, semantics, and screen-reader labels.
+Detection compares only the event's package name with the local Auto-snooze set. Graycie never reads the target app's screen content. OEM timing can delay events, setting propagation, service binding, notifications, or app launch; users can fall back to Open safely or manual Accessibility settings when necessary.

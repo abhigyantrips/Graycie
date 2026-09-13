@@ -64,7 +64,7 @@ The active Home application is resolved with `RoleManager.ROLE_HOME` on API 29+ 
 ./gradlew connectedDebugAndroidTest
 ```
 
-See [docs/TESTING.md](docs/TESTING.md) for device scenarios, [SPEC.md](SPEC.md) for behavior and privacy constraints, and [slopdocs/SNOOZE.md](slopdocs/SNOOZE.md) for the compatibility design and checklist.
+See [docs/TESTING.md](docs/TESTING.md) for device scenarios, [SPEC.md](SPEC.md) for the source specification, and [slopdocs/README.md](slopdocs/README.md) for a feature-by-feature breakdown of the implemented app.
 
 ## References
 
