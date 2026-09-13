@@ -83,7 +83,7 @@ class ManagerScreenTest {
     @Test fun nightLightIsDisabledAndHasNoDestination() {
         setContent(snapshot())
         compose.onNodeWithTag("feature-night-light").performScrollTo().assertIsNotEnabled()
-        compose.onNodeWithText("soon :tm:").assertExists()
+        compose.onNodeWithText("soon™").assertExists()
     }
 
     @Test fun missingPrerequisitesRouteMasterToSetupWithNewAdbCommand() {
@@ -94,11 +94,23 @@ class ManagerScreenTest {
         compose.onNodeWithText("Two small steps", substring = true).assertDoesNotExist()
         compose.onNodeWithText("Both permissions stay under your control", substring = true).assertExists()
         compose.onNodeWithTag("information-block").performScrollTo().assertExists()
-        compose.onNodeWithText("for your information").assertExists()
+        compose.onNodeWithText("For Your Information").assertExists()
         compose.onNodeWithContentDescription("Information").assertExists()
         compose.onNodeWithText(
             "adb shell pm grant now.abhi.graycie android.permission.WRITE_SECURE_SETTINGS"
         ).assertExists()
+        compose.onNodeWithText("Copy Command").assertExists()
+        compose.onNodeWithText("Check Again").assertExists()
+        compose.onNodeWithText("Open Accessibility Settings").assertExists()
+        compose.onNodeWithText("Finish setup").assertDoesNotExist()
+    }
+
+    @Test fun readySetupHasNoFinishSetupAction() {
+        setContent(snapshot())
+        compose.onNodeWithTag("open-setup").performClick()
+        compose.onNodeWithTag("setup-screen").assertExists()
+        compose.onNodeWithText("Finish setup").assertDoesNotExist()
+        compose.onNodeWithTag("setup-complete").assertDoesNotExist()
     }
 
     @Test fun exactPolicyLabelsMapToExistingPolicies() {

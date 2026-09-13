@@ -6,6 +6,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.provider.Settings
+import android.view.HapticFeedbackConstants
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -89,6 +90,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -320,7 +322,6 @@ fun ManagerContent(
                             },
                             onRefresh = refresh,
                             onOpenAccessibility = openAccessibilitySettings,
-                            onComplete = { navigate(Destination.HOME) },
                         )
                     }
                 }
@@ -413,7 +414,7 @@ private fun HomeScreen(
                 title = "Night Light Control",
                 description = "Make evenings easier on your eyes.",
                 enabled = false,
-                badge = "soon :tm:",
+                badge = "soon™",
                 testTag = "feature-night-light",
             )
         }
@@ -441,18 +442,18 @@ private fun HomeMasterControl(
     onResumeSnooze: () -> Unit,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 18.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         GraycieWordmark(manager.managerEnabled || manager.snoozedForPackage != null, motionEnabled)
-        Spacer(Modifier.height(2.dp))
+        Spacer(Modifier.height(0.dp))
         Text(
             "is",
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp, lineHeight = 26.sp),
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 24.sp, lineHeight = 28.sp),
             color = GraycieMuted,
-            modifier = Modifier.offset(y = (-8).dp).testTag("graycie-is"),
+            modifier = Modifier.offset(y = (-7).dp).testTag("graycie-is"),
         )
-        Spacer(Modifier.height(22.dp))
+        Spacer(Modifier.height(17.dp))
         MasterSwitch(manager, busy, motionEnabled, setEnabled, onSetupRequired)
         if (manager.snoozedForPackage != null) {
             Spacer(Modifier.height(18.dp))
@@ -510,6 +511,7 @@ private fun MasterSwitch(
     setEnabled: (Boolean) -> Unit,
     onSetupRequired: () -> Unit,
 ) {
+    val view = LocalView.current
     val checked = manager.managerEnabled || manager.snoozedForPackage != null
     val background by animateColorAsState(
         targetValue = if (checked) Color(0xFF2E7D52) else Color(0xFF3A3733),
@@ -534,6 +536,7 @@ private fun MasterSwitch(
                 enabled = !busy,
                 role = Role.Switch,
                 onValueChange = { next ->
+                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                     if (next && !manager.ready && manager.snoozedForPackage == null) onSetupRequired()
                     else setEnabled(next)
                 },
@@ -634,9 +637,12 @@ private fun FeatureCard(
             Text(
                 badge,
                 style = MaterialTheme.typography.bodySmall,
-                color = GraycieDisabled,
+                color = GraycieMuted,
                 maxLines = 1,
-                modifier = Modifier.testTag("feature-soon"),
+                modifier = Modifier.clip(RoundedCornerShape(50))
+                    .background(GraycieSurfaceRaised.copy(alpha = 0.82f))
+                    .padding(horizontal = 9.dp, vertical = 5.dp)
+                    .testTag("feature-soon"),
             )
         } else if (enabled) {
             Spacer(Modifier.width(8.dp))
@@ -694,6 +700,7 @@ private fun AuthorFooter() {
     Row(
         modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(top = 16.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
     ) {
         Text("Made to just work, by ", style = MaterialTheme.typography.bodySmall, color = GraycieMuted)
         val uriHandler = LocalUriHandler.current
@@ -922,6 +929,7 @@ private fun AppRow(
     toggle: (Boolean) -> Unit,
     openSafely: (String) -> Unit,
 ) {
+    val view = LocalView.current
     val own = app.packageName == manager.applicationId
     val selectable = !own && !app.isHome && !busy
     val checked = !own && !app.isHome && app.packageName in if (snoozeMode)
@@ -936,7 +944,10 @@ private fun AppRow(
             value = checked,
             enabled = selectable,
             role = Role.Checkbox,
-            onValueChange = toggle,
+            onValueChange = { selected ->
+                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                toggle(selected)
+            },
         ).semantics {
             stateDescription = if (checked) "Selected" else "Not selected"
             if (!selectable) disabled()
@@ -1014,7 +1025,6 @@ private fun SetupScreen(
     onCopy: () -> Unit,
     onRefresh: () -> Unit,
     onOpenAccessibility: () -> Unit,
-    onComplete: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().widthIn(max = 720.dp).testTag("setup-screen"),
@@ -1070,10 +1080,16 @@ private fun SetupScreen(
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(Modifier.width(7.dp))
-                        Text("Copy command")
+                        Text("Copy Command")
                     }
                     GraycieButton(onClick = onRefresh, modifier = Modifier.testTag("check-again")) {
-                        Text("Check again")
+                        Icon(
+                            painterResource(R.drawable.ic_tabler_refresh_filled),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(7.dp))
+                        Text("Check Again")
                     }
                 }
             }
@@ -1093,7 +1109,13 @@ private fun SetupScreen(
                     onClick = onOpenAccessibility,
                     modifier = Modifier.testTag("open-accessibility"),
                 ) {
-                    Text("Open Accessibility settings")
+                    Icon(
+                        painterResource(R.drawable.ic_tabler_settings_filled),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(7.dp))
+                    Text("Open Accessibility Settings")
                     Spacer(Modifier.width(8.dp))
                     Icon(
                         painterResource(R.drawable.ic_tabler_external_link_filled),
@@ -1118,7 +1140,7 @@ private fun SetupScreen(
                     )
                     Spacer(Modifier.width(9.dp))
                     Text(
-                        "for your information",
+                        "For Your Information",
                         style = MaterialTheme.typography.labelLarge,
                         color = Color(0xFF8CC8FF),
                     )
@@ -1129,15 +1151,6 @@ private fun SetupScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFD8EBFF),
                 )
-            }
-        }
-        if (manager.ready) {
-            item("complete") {
-                GraycieButton(
-                    onClick = onComplete,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-                        .testTag("setup-complete"),
-                ) { Text("Finish setup") }
             }
         }
     }
