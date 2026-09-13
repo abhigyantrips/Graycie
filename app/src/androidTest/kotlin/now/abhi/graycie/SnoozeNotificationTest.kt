@@ -1,5 +1,6 @@
 package now.abhi.graycie
 
+import android.app.NotificationManager
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
@@ -7,6 +8,16 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class SnoozeNotificationTest {
+    @Test fun recoveryChannelIsActiveRatherThanSilent() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        SnoozeNotificationManager(context)
+
+        val channel = context.getSystemService(NotificationManager::class.java)
+            .getNotificationChannel(SnoozeNotificationManager.CHANNEL_ID)
+
+        assertEquals(NotificationManager.IMPORTANCE_DEFAULT, channel.importance)
+    }
+
     @Test fun resumeUsesExplicitPrivateReceiverRatherThanMainActivity() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val intent = SnoozeNotificationManager.resumeIntent(context)

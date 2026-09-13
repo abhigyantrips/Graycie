@@ -18,7 +18,7 @@ Once snoozing begins, duplicate events and service disconnect callbacks keep the
 
 Recovery must be available before Graycie disables Accessibility. On Android 13 and newer, selecting the first Auto-snooze app requests notification permission; if permission is denied, that selection is not saved. Disabled app notifications or a disabled recovery channel prevent a new snooze and produce a warning.
 
-While snoozed, an ongoing low-importance notification identifies the triggering app. Its **Resume** action targets a private broadcast receiver and works without opening the activity. Tapping the notification body only opens Graycie. The Home screen provides the same Resume action.
+While snoozed, an active, ongoing notification identifies the triggering app. It alerts when snooze begins, then remains available without repeatedly alerting. Its **Resume** action targets a private broadcast receiver and works without opening the activity. Tapping the notification body only opens Graycie. The Home screen provides the same Resume action.
 
 Boot and package-replacement broadcasts restore the notification for a pending snooze.
 

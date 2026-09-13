@@ -56,6 +56,7 @@ class SnoozeNotificationManager(private val context: Context) : SnoozeNotificati
             .addAction(R.drawable.ic_tabler_check_filled, "Resume", resumePending)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .build()
         return runCatching {
@@ -68,15 +69,17 @@ class SnoozeNotificationManager(private val context: Context) : SnoozeNotificati
 
     private fun createChannel() {
         manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, "Graycie recovery", NotificationManager.IMPORTANCE_LOW).apply {
-                description = "Keeps Graycie’s one-tap accessibility Resume action available"
+            NotificationChannel(CHANNEL_ID, "Graycie recovery", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                description = "Alerts when Graycie pauses accessibility and keeps Resume available"
                 setShowBadge(false)
             }
         )
     }
 
     companion object {
-        const val CHANNEL_ID = "snooze_recovery"
+        // Channel importance cannot be raised after creation, so use a new ID to
+        // migrate installs that already created the former low-importance channel.
+        const val CHANNEL_ID = "snooze_recovery_active"
         const val NOTIFICATION_ID = 120
         const val ACTION_RESUME = "now.abhi.graycie.action.RESUME_SNOOZE"
         internal const val LAUNCH_REQUEST_CODE = 42
