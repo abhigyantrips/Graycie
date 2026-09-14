@@ -2,6 +2,12 @@
 
 Graycie is a native Android app that switches Android Color correction according to the foreground app. It has a local four-destination Jetpack Compose interface and a Kotlin `AccessibilityService`; it has no Flutter runtime, network feature, analytics, account, overlay, or database.
 
+Graycie's first-party source code and assets are free software licensed under
+[`GPL-3.0-or-later`](LICENSE). Bundled third-party fonts and icons remain under
+their own terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). In
+particular, Chat Favour is not open source and is not covered by Graycie's GPL
+license.
+
 Two policies are available:
 
 - **Only selected apps:** selected apps are grayscale and other apps are color.
@@ -22,7 +28,7 @@ Requirements are JDK 17 and an Android SDK with API 37 installed. Set only `sdk.
 ./gradlew :app:installDebug
 ```
 
-The project uses Gradle 9.3.1, AGP 9.1.1 with built-in Kotlin, Kotlin/Compose compiler plugin 2.4.0, Compose BOM 2026.08.00, `compileSdk 37`, `targetSdk 36`, and `minSdk 26`. Release builds retain the previous debug-key signing behavior until distribution signing is configured. Version 1.2.0 has version code 3.
+The project uses Gradle 9.3.1, AGP 9.1.1 with built-in Kotlin, Kotlin/Compose compiler plugin 2.4.0, Compose BOM 2026.08.00, `compileSdk 37`, `targetSdk 36`, and `minSdk 26`. Release APKs are intentionally unsigned; F-Droid applies its own signing key. Version 1.2.0 has version code 3.
 
 ## Device setup
 
@@ -52,7 +58,7 @@ When snoozed, press the notification **Resume** action or the in-app **Resume** 
 - `ForegroundAccessibilityService` debounces events for 250 ms and passes window metadata to a pure Kotlin classifier. Destinations are confirmed by two stable samples; layered app transitions are rechecked every 100 ms for at most one second. Home/Overview, persistent overlays, PiP, and split-screen are handled without inspecting window content.
 - `ui/ManagerScreen.kt` provides saved Home, Grayscale Control, Auto-Snooze Apps, and Setup destinations in one scaffold. It uses the fixed warm-dark palette, reduced-motion-aware transitions, rounded shadcn-style CTAs, and accessible controls. The existing selector controls retain their continuous-corner shape.
 
-Unmodified Chat Favour Regular, Atkinson Hyperlegible, and the vendored Tabler Filled icons are bundled with their license/readme notices under `app/src/main/assets/licenses/`. Chat Favour is limited to the Home wordmark and lowercase-`a` brand glyph; interface headings use bold Atkinson. Installed applications continue to use their real launcher icons.
+Unmodified Chat Favour Regular, Atkinson Hyperlegible, and the vendored Tabler Filled icons are bundled with their license/readme notices under `app/src/main/assets/licenses/`. Chat Favour is limited to the Home wordmark and lowercase-`a` brand glyph; interface headings use bold Atkinson. Chat Favour and its derived vector are declared as `NonFreeAssets` in the prepared F-Droid metadata because its bundled terms prohibit modification and do not expressly grant raw-font redistribution. Installed applications continue to use their real launcher icons.
 
 The active Home application is resolved with `RoleManager.ROLE_HOME` on API 29+ and default-Home intent resolution on API 26–28. No launcher, assistant, or vendor package is hard-coded. Debug builds log package names and classifier reasons only.
 

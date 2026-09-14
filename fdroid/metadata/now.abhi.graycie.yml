@@ -1,0 +1,33 @@
+AntiFeatures:
+  NonFreeAssets:
+    en-US: Chat Favour font and derived icon forbid modifications.
+Categories:
+  - System
+License: GPL-3.0-or-later
+AuthorName: Abhigyan Trips
+AuthorWebSite: https://abhi.now
+WebSite: https://github.com/abhigyantrips/Graycie
+SourceCode: https://github.com/abhigyantrips/Graycie
+IssueTracker: https://github.com/abhigyantrips/Graycie/issues
+Changelog: https://github.com/abhigyantrips/Graycie/releases
+
+AutoName: Graycie
+
+RepoType: git
+Repo: https://github.com/abhigyantrips/Graycie.git
+
+Builds:
+  - versionName: 1.2.0
+    versionCode: 3
+    commit: v1.2.0
+    subdir: app
+    gradle:
+      - yes
+    antifeatures:
+      NonFreeAssets:
+        en-US: Chat Favour font and derived icon forbid modifications.
+
+AutoUpdateMode: Version %v
+UpdateCheckMode: Tags
+CurrentVersion: 1.2.0
+CurrentVersionCode: 3

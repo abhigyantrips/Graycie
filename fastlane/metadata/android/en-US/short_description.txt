@@ -1,0 +1,1 @@
+Apply grayscale automatically based on the app in the foreground

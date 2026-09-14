@@ -451,7 +451,7 @@ private fun HomeMasterControl(
             "is",
             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 24.sp, lineHeight = 28.sp),
             color = GraycieMuted,
-            modifier = Modifier.offset(y = (-7).dp).testTag("graycie-is"),
+            modifier = Modifier.testTag("graycie-is"),
         )
         Spacer(Modifier.height(17.dp))
         MasterSwitch(manager, busy, motionEnabled, setEnabled, onSetupRequired)

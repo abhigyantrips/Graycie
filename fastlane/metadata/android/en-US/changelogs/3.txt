@@ -1,0 +1,7 @@
+Initial F-Droid release.
+
+• Per-app grayscale policies
+• Local accessibility-based foreground detection
+• Auto-snooze and Open safely for sensitive apps
+• Reboot, upgrade, and failed-recovery handling
+• Four-screen native Android interface

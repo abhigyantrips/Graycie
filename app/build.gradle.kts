@@ -28,8 +28,6 @@ android {
 
     buildTypes {
         release {
-            // Preserve the existing installable release behavior.
-            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
         }
     }
