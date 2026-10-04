@@ -445,7 +445,7 @@ private fun HomeMasterControl(
         modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        GraycieWordmark(manager.managerEnabled || manager.snoozedForPackage != null, motionEnabled)
+        GraycieWordmark(manager.managerEnabled, motionEnabled)
         Spacer(Modifier.height(0.dp))
         Text(
             "is",
@@ -512,7 +512,7 @@ private fun MasterSwitch(
     onSetupRequired: () -> Unit,
 ) {
     val view = LocalView.current
-    val checked = manager.managerEnabled || manager.snoozedForPackage != null
+    val checked = manager.managerEnabled
     val background by animateColorAsState(
         targetValue = if (checked) Color(0xFF2E7D52) else Color(0xFF3A3733),
         animationSpec = if (motionEnabled) tween(240) else snap(),
@@ -533,11 +533,11 @@ private fun MasterSwitch(
             .background(background)
             .toggleable(
                 value = checked,
-                enabled = !busy,
+                enabled = !busy && manager.snoozedForPackage == null,
                 role = Role.Switch,
                 onValueChange = { next ->
                     view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                    if (next && !manager.ready && manager.snoozedForPackage == null) onSetupRequired()
+                    if (next && !manager.ready) onSetupRequired()
                     else setEnabled(next)
                 },
             )
@@ -582,20 +582,35 @@ private fun SnoozeRecoveryRow(
 ) {
     val packageName = manager.snoozedForPackage ?: return
     val label = apps.firstOrNull { it.packageName == packageName }?.label ?: packageName
-    Row(
-        modifier = Modifier.fillMaxWidth().testTag("snooze-recovery"),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    Column(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+            .background(GraycieAmber.copy(alpha = 0.12f))
+            .border(1.dp, GraycieAmber.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+            .padding(14.dp).testTag("snooze-recovery"),
     ) {
-        Column(Modifier.weight(1f)) {
-            Text("Snoozed for $label", style = MaterialTheme.typography.titleMedium)
-            Text("Accessibility stays off until you resume.", style = MaterialTheme.typography.bodySmall, color = GraycieMuted)
-        }
+        Text("Accessibility paused for $label", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(3.dp))
+        Text(
+            if (manager.managerEnabled) {
+                "Grant permission again to re-enable Graycie."
+            } else {
+                "Grant permission again to keep Auto-snooze ready."
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = GraycieMuted,
+        )
+        Spacer(Modifier.height(12.dp))
         GraycieButton(
             onClick = resume,
             enabled = !busy && manager.status != ManagerStatus.RESUMING,
-            modifier = Modifier.testTag("resume-snooze"),
-        ) { Text(if (manager.status == ManagerStatus.RESUMING) "Resuming…" else "Resume") }
+            modifier = Modifier.align(Alignment.End).testTag("resume-snooze"),
+        ) {
+            Text(
+                if (manager.status == ManagerStatus.RESUMING) "Granting…"
+                else if (manager.managerEnabled) "Grant & Re-enable"
+                else "Grant Permission"
+            )
+        }
     }
 }
 
@@ -982,7 +997,7 @@ private fun AppRow(
         if (snoozeMode && checked) {
             IconButton(
                 onClick = { openSafely(app.packageName) },
-                enabled = !busy && manager.ready && manager.status == ManagerStatus.ACTIVE,
+                enabled = !busy && manager.ready && manager.snoozedForPackage == null,
                 modifier = Modifier.testTag("open-safely:${app.packageName}"),
             ) {
                 Icon(

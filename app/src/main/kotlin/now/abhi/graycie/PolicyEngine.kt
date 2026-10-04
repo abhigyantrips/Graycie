@@ -89,7 +89,7 @@ class PolicyEngine(
     }
 
     fun prepareSnooze(packageName: String): Boolean {
-        if (!state.managerEnabled || state.snoozedForPackage != null || packageName !in state.snoozePackages) {
+        if (state.snoozedForPackage != null || packageName !in state.snoozePackages) {
             return false
         }
         save(state.copy(snoozedForPackage = packageName, error = null))

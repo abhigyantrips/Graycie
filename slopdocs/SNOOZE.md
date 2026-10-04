@@ -8,7 +8,7 @@ The grayscale and Auto-snooze selections are independent. Graycie and the active
 
 ## Automatic snooze and Open safely
 
-Automatic detection checks window-state events before normal foreground debouncing. If management is active, the package is selected, and recovery notifications are available, Graycie posts recovery, restores color, and calls Android's `disableSelf()` API. Detection is best-effort because the target app may check Accessibility before Graycie receives its event.
+Automatic detection checks window-state events before normal foreground debouncing. If Graycie's Accessibility service is enabled, the package is selected, and recovery notifications are available, Graycie posts recovery, restores color, and calls Android's `disableSelf()` API. Auto-snooze remains active when grayscale management is switched off. Detection is best-effort because the target app may check Accessibility before Graycie receives its event.
 
 **Open safely** is the deterministic entry path. Graycie prepares recovery, restores color, removes only its own component from the current enabled-services setting, confirms that it is gone, and only then launches the selected app. If removal cannot be confirmed, the launch is aborted.
 
@@ -18,7 +18,7 @@ Once snoozing begins, duplicate events and service disconnect callbacks keep the
 
 Recovery must be available before Graycie disables Accessibility. On Android 13 and newer, selecting the first Auto-snooze app requests notification permission; if permission is denied, that selection is not saved. Disabled app notifications or a disabled recovery channel prevent a new snooze and produce a warning.
 
-While snoozed, an active, ongoing notification identifies the triggering app. It alerts when snooze begins, then remains available without repeatedly alerting. Its **Resume** action targets a private broadcast receiver and works without opening the activity. Tapping the notification body only opens Graycie. The Home screen provides the same Resume action.
+While snoozed, an active, ongoing notification identifies the triggering app. It alerts when snooze begins, then remains available without repeatedly alerting. If grayscale management was on, its action is **Grant & Re-enable**; otherwise it is **Grant Permission**. Both actions restore Graycie's Accessibility service directly through the secure-settings grant, while only the former resumes grayscale management. The action targets a private broadcast receiver and works without opening the activity. Tapping the notification body only opens Graycie. The Home screen provides the same contextual recovery action in a callout below the master switch.
 
 Boot and package-replacement broadcasts restore the notification for a pending snooze.
 
@@ -28,7 +28,7 @@ Resume is always user initiated; a timer or foreground-app change never starts i
 
 Snooze state and the notification clear only after that connection. A refused write, missing grant, malformed enabled-services value, or eight-second bind timeout leaves recovery available and directs the user toward Accessibility settings. A manual re-enable in Android settings is also accepted when the service reconnects.
 
-Turning the master control off while snoozed cancels recovery and leaves Accessibility disabled.
+The master control reflects the pre-snooze grayscale state and is locked until the user resolves the permission callout.
 
 ## Runtime states
 

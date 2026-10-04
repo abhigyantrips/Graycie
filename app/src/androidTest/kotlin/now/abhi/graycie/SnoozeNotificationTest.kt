@@ -41,4 +41,15 @@ class SnoozeNotificationTest {
         routeRecoveryAction(Intent.ACTION_BOOT_COMPLETED, { resumed++ }, { reposted++ })
         assertEquals(1, reposted)
     }
+
+    @Test fun recoveryActionReflectsThePreSnoozeManagerState() {
+        assertEquals(
+            "Grant & Re-enable",
+            SnoozeNotificationManager.recoveryActionLabel(reenableManager = true),
+        )
+        assertEquals(
+            "Grant Permission",
+            SnoozeNotificationManager.recoveryActionLabel(reenableManager = false),
+        )
+    }
 }

@@ -195,7 +195,7 @@ class ManagerScreenTest {
         compose.onNodeWithText("Auto-snooze disabled for Bank.").assertIsDisplayed()
     }
 
-    @Test fun snoozedHomeKeepsSwitchOnAndOffersResume() {
+    @Test fun snoozedHomeKeepsSwitchOnAndOffersGrantAndReenable() {
         var resumes = 0
         setContent(
             snapshot = snapshot(service = false).copy(
@@ -207,7 +207,26 @@ class ManagerScreenTest {
             resume = { resumes++ },
         )
         compose.onNodeWithTag("master-switch").assertIsOn()
-        compose.onNodeWithText("Snoozed for Bank").assertExists()
+        compose.onNodeWithText("Accessibility paused for Bank").assertExists()
+        compose.onNodeWithText("Grant & Re-enable").assertExists()
+        compose.onNodeWithTag("resume-snooze").performClick()
+        assertEquals(1, resumes)
+    }
+
+    @Test fun snoozedHomeKeepsSwitchOffAndOffersPermissionOnlyRecovery() {
+        var resumes = 0
+        setContent(
+            snapshot = snapshot(service = false).copy(
+                managerEnabled = false,
+                snoozedForPackage = "bank",
+                status = ManagerStatus.SNOOZED,
+            ),
+            apps = listOf(app("Bank", "bank")),
+            resume = { resumes++ },
+        )
+        compose.onNodeWithTag("master-switch").assertIsOff()
+        compose.onNodeWithText("Accessibility paused for Bank").assertExists()
+        compose.onNodeWithText("Grant Permission").assertExists()
         compose.onNodeWithTag("resume-snooze").performClick()
         assertEquals(1, resumes)
     }

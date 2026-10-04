@@ -21,8 +21,14 @@ class SnoozeCoordinatorTest {
         var postWorks = true
         var posts = 0
         var cancels = 0
+        var lastReenableManager: Boolean? = null
         override fun isReady() = ready
-        override fun post(packageName: String): Boolean { posts++; order += "notification"; return ready && postWorks }
+        override fun post(packageName: String, reenableManager: Boolean): Boolean {
+            posts++
+            lastReenableManager = reenableManager
+            order += "notification"
+            return ready && postWorks
+        }
         override fun cancel() { cancels++ }
     }
     private class Access(private val order: MutableList<String>) : AccessibilityComponentControl {
@@ -59,6 +65,25 @@ class SnoozeCoordinatorTest {
         assertTrue(engine.state.managerEnabled)
         assertEquals("bank", engine.state.snoozedForPackage)
         assertEquals(listOf("notification", "color", "disableSelf"), order)
+        assertEquals(true, notifications.lastReenableManager)
+    }
+
+    @Test fun automaticSnoozeWorksWhileManagerIsOffAndOnlyRestoresPermission() {
+        engine.setEnabled(false)
+        order.clear()
+
+        var disables = 0
+        assertTrue(subject.automatic("bank") { disables++; order += "disableSelf" })
+        engine.onDisconnected()
+
+        assertEquals(1, disables)
+        assertFalse(engine.state.managerEnabled)
+        assertEquals("bank", engine.state.snoozedForPackage)
+        assertEquals(false, notifications.lastReenableManager)
+        assertTrue(subject.resume())
+        assertTrue(subject.onServiceConnected())
+        assertFalse(engine.state.managerEnabled)
+        assertNull(engine.state.snoozedForPackage)
     }
 
     @Test fun missingNotificationNeverDisablesOrPersistsSnooze() {
@@ -128,12 +153,14 @@ class SnoozeCoordinatorTest {
         assertEquals("bank", restarted.state.snoozedForPackage)
     }
 
-    @Test fun turningMasterOffWhileSnoozedDoesNotReenableAccessibility() {
+    @Test fun defensiveMasterOffCancelsRecoveryWithoutReenablingAccessibility() {
         subject.automatic("bank") {}
         order.clear()
         subject.cancelByTurningOff()
         assertFalse(engine.state.managerEnabled)
         assertNull(engine.state.snoozedForPackage)
+        assertEquals(1, notifications.cancels)
         assertFalse("enable" in order)
     }
+
 }

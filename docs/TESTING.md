@@ -52,16 +52,17 @@ Grayscale must report mode `0` and enabled `1`; color must report enabled `0`. M
 | Large text / narrow screen | All content remains scrollable and controls remain usable |
 | First snooze selection on API 33+ | Permission prompt appears; denial does not save the selection |
 | Notifications/channel disabled | Snooze refuses to disable accessibility and shows a warning |
-| Automatic configured-app open | Recovery posts, color restores, then accessibility disables best-effort |
+| Automatic configured-app open while manager is on | Recovery posts with **Grant & Re-enable**, color restores, then accessibility disables best-effort |
+| Automatic configured-app open while manager is off | Recovery still posts with **Grant Permission**, then accessibility disables best-effort |
 | Duplicate window/lifecycle events | One notification/cleanup; master remains enabled and snoozed |
 | Open safely | Accessibility is confirmed absent before the banking activity starts |
 | Safe disable refusal | Target does not launch; recovery/error remains visible |
 | Notification body tap | Graycie opens but recovery does not begin |
-| Notification Resume while Graycie is closed | Private receiver starts recovery with one tap; activity is not required |
-| In-app Resume | Starts the same controller recovery flow |
-| Resume refusal / permission loss / timeout | Snooze and notification remain; Accessibility settings is available |
+| Notification recovery while Graycie is closed | Private receiver grants access directly with one tap; activity is not required; the prior master state is preserved |
+| In-app recovery callout | Appears only for a pending snooze and starts the same direct recovery flow |
+| Recovery refusal / permission loss / timeout | Snooze and notification remain; Accessibility settings is available |
 | Manual accessibility re-enable | Service reconnect clears persisted snooze and notification |
-| Master off while snoozed | Recovery clears; accessibility remains disabled |
+| Master switch while snoozed | Shows the pre-snooze state and stays locked until permission recovery completes |
 | Reboot / package replacement while snoozed | Recovery notification is reposted |
 | Another accessibility service enabled | TalkBack/reader entry and ordering remain unchanged |
 
@@ -77,4 +78,4 @@ Force-stop is distinct from dismissing the activity and Android may skip service
 adb shell settings put secure accessibility_display_daltonizer_enabled 0
 ```
 
-Run device coverage on API 26, API 33, and the current target API. Press notification Resume while Graycie is closed and verify the activity is not required, service reconnection completes, and the notification disappears only after connection. Exercise refusal and the eight-second timeout and confirm recovery remains. Validate at least one affected banking app and record whether automatic detection succeeds before its compatibility check or requires retry. Acceptance always requires Open safely to remove this service before the banking activity becomes foreground. Also revoke notification permission, disable the recovery channel, reboot while snoozed, and replace the Graycie package while recovery is pending.
+Run device coverage on API 26, API 33, and the current target API. Press each notification recovery variant while Graycie is closed and verify the activity is not required, service reconnection completes, the previous master state is preserved, and the notification disappears only after connection. Exercise refusal and the eight-second timeout and confirm recovery remains. Validate at least one affected banking app with the manager both on and off, and record whether automatic detection succeeds before its compatibility check or requires retry. Acceptance always requires Open safely to remove this service before the banking activity becomes foreground. Also revoke notification permission, disable the recovery channel, reboot while snoozed, and replace the Graycie package while recovery is pending.

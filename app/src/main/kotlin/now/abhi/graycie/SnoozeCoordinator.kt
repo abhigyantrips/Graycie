@@ -4,7 +4,7 @@ enum class ManagerStatus { DISABLED, ACTIVE, SNOOZING, SNOOZED, RESUMING }
 
 interface SnoozeNotifications {
     fun isReady(): Boolean
-    fun post(packageName: String): Boolean
+    fun post(packageName: String, reenableManager: Boolean): Boolean
     fun cancel()
 }
 
@@ -21,7 +21,7 @@ class SnoozeCoordinator(
     private val phaseChanged: (ManagerStatus) -> Unit,
 ) {
     fun automatic(packageName: String, disableSelf: () -> Unit): Boolean {
-        if (packageName !in engine.state.snoozePackages || !engine.state.managerEnabled ||
+        if (packageName !in engine.state.snoozePackages ||
             engine.state.snoozedForPackage != null) return false
         if (!notifications.isReady()) {
             engine.reportError(NOTIFICATION_ERROR)
@@ -30,7 +30,7 @@ class SnoozeCoordinator(
         phaseChanged(ManagerStatus.SNOOZING)
         if (!engine.prepareSnooze(packageName)) return finishSnoozed(false)
         // Recovery must exist before the service removes its own access.
-        if (!runCatching { notifications.post(packageName) }.getOrDefault(false)) {
+        if (!postRecovery(packageName)) {
             engine.abortSnooze(NOTIFICATION_ERROR)
             phaseChanged(ManagerStatus.ACTIVE)
             return false
@@ -41,7 +41,7 @@ class SnoozeCoordinator(
     }
 
     fun openSafely(packageName: String): Boolean {
-        if (packageName !in engine.state.snoozePackages || !engine.state.managerEnabled ||
+        if (packageName !in engine.state.snoozePackages ||
             engine.state.snoozedForPackage != null) return false
         if (!notifications.isReady()) {
             engine.reportError(NOTIFICATION_ERROR)
@@ -49,7 +49,7 @@ class SnoozeCoordinator(
         }
         phaseChanged(ManagerStatus.SNOOZING)
         if (!engine.prepareSnooze(packageName)) return finishSnoozed(false)
-        if (!runCatching { notifications.post(packageName) }.getOrDefault(false)) {
+        if (!postRecovery(packageName)) {
             engine.abortSnooze(NOTIFICATION_ERROR)
             phaseChanged(ManagerStatus.ACTIVE)
             return false
@@ -110,13 +110,18 @@ class SnoozeCoordinator(
         return true
     }
 
+    /** Defensive path for non-UI callers; the Home switch is locked during recovery. */
     fun cancelByTurningOff() {
         engine.setEnabled(false)
         notifications.cancel()
         phaseChanged(ManagerStatus.DISABLED)
     }
 
-    fun repostRecovery(): Boolean = engine.state.snoozedForPackage?.let(notifications::post) ?: false
+    fun repostRecovery(): Boolean = engine.state.snoozedForPackage?.let(::postRecovery) ?: false
+
+    private fun postRecovery(packageName: String): Boolean = runCatching {
+        notifications.post(packageName, reenableManager = engine.state.managerEnabled)
+    }.getOrDefault(false)
 
     private fun resumeFailed(message: String): Boolean {
         engine.reportError(message)

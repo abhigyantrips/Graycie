@@ -24,6 +24,6 @@ Policy evaluation and secure-setting access are kept behind small, tested bounda
 
 On activity resume, Graycie marks its own screen as the current color destination, refreshes permissions and Accessibility status, and reloads the installed-app catalog.
 
-An unexpected Accessibility service removal disables active management and attempts to restore color. A disconnect caused by an intentional snooze preserves the user's enabled preference and pending recovery instead. When the service reconnects, Graycie clears stale foreground/applied-state assumptions and completes any pending resume.
+An unexpected Accessibility service removal disables active management and attempts to restore color. A disconnect caused by an intentional snooze preserves the user's enabled preference and pending recovery instead, including when that preference was already off. When the service reconnects, Graycie clears stale foreground/applied-state assumptions and completes any pending recovery without changing the user's master-switch preference.
 
 Provider failures are fail-safe: normal management is stopped, color cleanup is attempted when permission remains available, and the error is exposed to the interface. Unchanged secure-setting values are not rewritten.

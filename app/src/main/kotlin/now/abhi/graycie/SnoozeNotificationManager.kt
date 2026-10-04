@@ -23,7 +23,7 @@ class SnoozeNotificationManager(private val context: Context) : SnoozeNotificati
             manager.getNotificationChannel(CHANNEL_ID)?.importance != NotificationManager.IMPORTANCE_NONE
     }.getOrDefault(false)
 
-    override fun post(packageName: String): Boolean {
+    override fun post(packageName: String, reenableManager: Boolean): Boolean {
         if (!isReady()) return false
         val label = runCatching {
             context.packageManager.getApplicationLabel(
@@ -48,12 +48,16 @@ class SnoozeNotificationManager(private val context: Context) : SnoozeNotificati
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_graycie_a)
             .setContentTitle("Graycie is taking a break")
-            .setContentText("Accessibility is off for $label. Use Resume when you’re ready.")
+            .setContentText("Graycie paused accessibility for $label.")
             .setStyle(NotificationCompat.BigTextStyle().bigText(
-                "Accessibility is off for $label. Use Resume when you’re ready to leave the app."
+                "Graycie paused its accessibility permission for $label. Restore it when you’re ready to leave the app."
             ))
             .setContentIntent(launchPending)
-            .addAction(R.drawable.ic_tabler_check_filled, "Resume", resumePending)
+            .addAction(
+                R.drawable.ic_tabler_check_filled,
+                recoveryActionLabel(reenableManager),
+                resumePending,
+            )
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -87,5 +91,8 @@ class SnoozeNotificationManager(private val context: Context) : SnoozeNotificati
 
         internal fun resumeIntent(context: Context): Intent =
             Intent(context, SnoozeRecoveryReceiver::class.java).setAction(ACTION_RESUME)
+
+        internal fun recoveryActionLabel(reenableManager: Boolean): String =
+            if (reenableManager) "Grant & Re-enable" else "Grant Permission"
     }
 }
