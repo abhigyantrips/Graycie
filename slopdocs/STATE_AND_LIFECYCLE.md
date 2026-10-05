@@ -12,6 +12,8 @@ Graycie stores configuration locally in the `grayscale_manager` preferences file
 
 The controller also records limited operational state, such as the last recognized package, last applied grayscale value, and a recoverable error. These values help avoid redundant writes and surface failures, but are reset when a service reconnection makes them unreliable.
 
+A separate persisted flag records whether Graycie took control of Color correction. It is saved before attempting a managed setting change and cleared only after successful cleanup. It survives service reconnections and failed cleanup, so Graycie can clean up its own changes without disabling an unrelated correction while management is off.
+
 There is no database, account, cloud sync, analytics, or network storage.
 
 ## State ownership
@@ -24,6 +26,6 @@ Policy evaluation and secure-setting access are kept behind small, tested bounda
 
 On activity resume, Graycie marks its own screen as the current color destination, refreshes permissions and Accessibility status, and reloads the installed-app catalog.
 
-An unexpected Accessibility service removal disables active management and attempts to restore color. A disconnect caused by an intentional snooze preserves the user's enabled preference and pending recovery instead, including when that preference was already off. When the service reconnects, Graycie clears stale foreground/applied-state assumptions and completes any pending recovery without changing the user's master-switch preference.
+An unexpected Accessibility service removal disables active management and attempts to restore color only if Graycie took control of Color correction. A disconnect caused by an intentional snooze preserves the user's enabled preference and pending recovery instead, including when that preference was already off. When the service reconnects, Graycie clears stale foreground/applied-state assumptions and completes any pending recovery without changing the user's master-switch preference. Off-state service connections, disconnections, and snooze leave existing Color correction alone unless cleanup from earlier management remains pending.
 
 Provider failures are fail-safe: normal management is stopped, color cleanup is attempted when permission remains available, and the error is exposed to the interface. Unchanged secure-setting values are not rewritten.

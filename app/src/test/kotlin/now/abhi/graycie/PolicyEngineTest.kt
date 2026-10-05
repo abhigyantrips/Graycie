@@ -220,11 +220,54 @@ class PolicyEngineTest {
         assertEquals(1, settings.releases)
     }
 
-    @Test fun disabledStartupReleasesWithoutSelectingColorMode() {
+    @Test fun disabledStartupDoesNotTouchColorCorrection() {
         engine.onConnected()
-        assertEquals(1, settings.releases)
+        assertEquals(0, settings.releases)
         assertTrue(settings.writes.isEmpty())
-        assertEquals(false, engine.state.lastAppliedGrayscale)
+        assertNull(engine.state.lastAppliedGrayscale)
+        assertFalse(engine.state.ownsColorCorrection)
+    }
+
+    @Test fun completedCleanupDoesNotRepeatOnDisconnectOrReconnect() {
+        start()
+        engine.onForeground("selected", true)
+        engine.setEnabled(false)
+        engine.onDisconnected()
+        engine.onDisconnected()
+        engine().onConnected()
+        assertEquals(1, settings.releases)
+        assertFalse(store.saved.ownsColorCorrection)
+    }
+
+    @Test fun failedCleanupRetainsOwnershipAcrossRestartForRetry() {
+        start()
+        engine.onForeground("selected", true)
+        settings.releaseAccepts = false
+        engine.setEnabled(false)
+        assertTrue(store.saved.ownsColorCorrection)
+
+        settings.releaseAccepts = true
+        val restarted = engine()
+        restarted.onConnected()
+        assertEquals(2, settings.releases)
+        assertFalse(restarted.state.ownsColorCorrection)
+        assertNull(restarted.state.error)
+        restarted.onDisconnected()
+        assertEquals(2, settings.releases)
+    }
+
+    @Test fun permissionLossRetainsOwnershipUntilCleanupCanRun() {
+        start()
+        engine.onForeground("selected", true)
+        settings.permission = false
+        engine.checkPrerequisites()
+        assertTrue(store.saved.ownsColorCorrection)
+
+        settings.permission = true
+        val restarted = engine()
+        restarted.onConnected()
+        assertEquals(1, settings.releases)
+        assertFalse(restarted.state.ownsColorCorrection)
     }
 
     @Test fun missingServiceReleasesManagement() {
@@ -250,6 +293,7 @@ class PolicyEngineTest {
 
     @Test fun failedMasterOffDoesNotRetryOrCacheColor() {
         start()
+        engine.onForeground("selected", true)
         settings.releaseAccepts = false
         engine.setEnabled(false)
         assertEquals(1, settings.releases)

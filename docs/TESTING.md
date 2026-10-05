@@ -26,11 +26,15 @@ adb shell settings get secure accessibility_display_daltonizer
 adb shell settings get secure accessibility_display_daltonizer_enabled
 ```
 
-Grayscale must report mode `0` and enabled `1`; color must report enabled `0`. Master-off and service cleanup must also report enabled `0`.
+Grayscale must report mode `0` and enabled `1`; color must report enabled `0`. Master-off and service cleanup must also report enabled `0` when Graycie previously took control. With management off and no pending cleanup, existing Color correction must remain unchanged.
 
 | Scenario | Expected |
 | --- | --- |
 | Install beside/over the old identity | Not an upgrade: old preferences, grant, and accessibility enablement do not transfer |
+| Existing Color correction enabled, Graycie master off | Enabling, reconnecting, or disabling Graycie's accessibility service preserves the original mode and enabled state |
+| Existing Color correction enabled, auto-snooze while master off | Automatic snooze, Open safely, and recovery preserve the original correction |
+| Correction manually enabled after Graycie is turned off | Subsequent service disconnect/reconnect leaves it unchanged |
+| Graycie cleanup fails, then process restarts | Cleanup responsibility survives; reconnect retries cleanup once permission/provider access returns |
 | Selected ↔ unselected | Color follows both policy modes without repeated duplicate writes |
 | Manager | Always color and non-selectable |
 | Completed Home gesture | Settles to grayscale after the launcher is confirmed |

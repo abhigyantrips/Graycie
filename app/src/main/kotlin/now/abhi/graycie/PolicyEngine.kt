@@ -13,6 +13,7 @@ data class ManagerState(
     val error: String? = null,
     val snoozePackages: Set<String> = emptySet(),
     val snoozedForPackage: String? = null,
+    val ownsColorCorrection: Boolean = false,
 )
 
 interface StateStore {
@@ -96,24 +97,27 @@ class PolicyEngine(
         return true
     }
 
-    /** Restore color without changing the user's master-enabled preference. */
-    fun restoreColorForSnooze(): Boolean = try {
-        if (!settings.hasPermission()) throw SecurityException("Permission missing")
-        if (!settings.release()) {
+    /** Release Graycie's correction without changing the user's master-enabled preference. */
+    fun restoreColorForSnooze(): Boolean {
+        if (!state.ownsColorCorrection) return true
+        return try {
+            if (!settings.hasPermission()) throw SecurityException("Permission missing")
+            if (!settings.release()) {
+                save(state.copy(lastAppliedGrayscale = null,
+                    error = "Color could not be restored before snoozing. Turn Color correction off in Android settings."))
+                false
+            } else {
+                save(state.copy(lastAppliedGrayscale = false, ownsColorCorrection = false, error = null))
+                true
+            }
+        } catch (_: SecurityException) {
+            save(state.copy(lastAppliedGrayscale = null, error = PERMISSION_ERROR))
+            false
+        } catch (_: RuntimeException) {
             save(state.copy(lastAppliedGrayscale = null,
                 error = "Color could not be restored before snoozing. Turn Color correction off in Android settings."))
             false
-        } else {
-            save(state.copy(lastAppliedGrayscale = false, error = null))
-            true
         }
-    } catch (_: SecurityException) {
-        save(state.copy(lastAppliedGrayscale = null, error = PERMISSION_ERROR))
-        false
-    } catch (_: RuntimeException) {
-        save(state.copy(lastAppliedGrayscale = null,
-            error = "Color could not be restored before snoozing. Turn Color correction off in Android settings."))
-        false
     }
 
     fun abortSnooze(message: String) {
@@ -189,6 +193,9 @@ class PolicyEngine(
         if (state.lastAppliedGrayscale == enabled) return
         try {
             if (!settings.hasPermission()) throw SecurityException("Permission missing")
+            // Persist ownership before writing so partial failures and restarts can
+            // clean up, without touching corrections when Graycie has never managed them.
+            save(state.copy(ownsColorCorrection = true))
             if (!settings.setGrayscale(enabled)) {
                 failChange("Android refused the color correction change. Check setup and try again.")
                 return
@@ -202,6 +209,7 @@ class PolicyEngine(
     }
 
     private fun releaseGrayscale() {
+        if (!state.ownsColorCorrection) return
         try {
             if (!settings.hasPermission()) throw SecurityException("Permission missing")
             if (!settings.release()) {
@@ -209,7 +217,7 @@ class PolicyEngine(
                     cleanup = false)
                 return
             }
-            save(state.copy(lastAppliedGrayscale = false, error = null))
+            save(state.copy(lastAppliedGrayscale = false, ownsColorCorrection = false, error = null))
         } catch (_: SecurityException) {
             failChange(PERMISSION_ERROR, cleanup = false)
         } catch (_: RuntimeException) {
@@ -220,11 +228,14 @@ class PolicyEngine(
 
     private fun failChange(message: String, cleanup: Boolean = true) {
         var error = message
-        if (cleanup && settings.hasPermission()) {
+        var ownsColorCorrection = state.ownsColorCorrection
+        if (cleanup && ownsColorCorrection && settings.hasPermission()) {
             val restored = try { settings.release() } catch (_: RuntimeException) { false }
+            if (restored) ownsColorCorrection = false
             if (!restored) error += " Color correction could not be turned off; turn it off in Android settings."
         }
-        save(state.copy(managerEnabled = false, lastAppliedGrayscale = null, error = error))
+        save(state.copy(managerEnabled = false, lastAppliedGrayscale = null,
+            ownsColorCorrection = ownsColorCorrection, error = error))
     }
 
     private sealed interface ForegroundTarget {

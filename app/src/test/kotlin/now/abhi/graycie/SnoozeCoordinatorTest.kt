@@ -44,7 +44,8 @@ class SnoozeCoordinatorTest {
     }
 
     private val order = mutableListOf<String>()
-    private val store = Store(ManagerState(managerEnabled = true, snoozePackages = setOf("bank")))
+    private val store = Store(ManagerState(managerEnabled = true,
+        ownsColorCorrection = true, snoozePackages = setOf("bank")))
     private val color = Color(order)
     private val engine = PolicyEngine("manager", store, color, { true })
     private val notifications = Notifications(order)
@@ -71,6 +72,7 @@ class SnoozeCoordinatorTest {
     @Test fun automaticSnoozeWorksWhileManagerIsOffAndOnlyRestoresPermission() {
         engine.setEnabled(false)
         order.clear()
+        val releasesBeforeSnooze = color.releases
 
         var disables = 0
         assertTrue(subject.automatic("bank") { disables++; order += "disableSelf" })
@@ -84,6 +86,20 @@ class SnoozeCoordinatorTest {
         assertTrue(subject.onServiceConnected())
         assertFalse(engine.state.managerEnabled)
         assertNull(engine.state.snoozedForPackage)
+        engine.onConnected()
+        assertEquals(releasesBeforeSnooze, color.releases)
+        assertEquals(listOf("notification", "disableSelf", "enable"), order)
+    }
+
+    @Test fun safeLaunchWhileManagerIsOffDoesNotTouchColorCorrection() {
+        engine.setEnabled(false)
+        order.clear()
+        val releasesBeforeSnooze = color.releases
+
+        assertTrue(subject.openSafely("bank"))
+        assertEquals(listOf("notification", "disable", "launch"), order)
+        assertEquals(releasesBeforeSnooze, color.releases)
+        assertFalse(engine.state.managerEnabled)
     }
 
     @Test fun missingNotificationNeverDisablesOrPersistsSnooze() {

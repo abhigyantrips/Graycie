@@ -45,7 +45,9 @@ The project uses Gradle 9.3.1, AGP 9.1.1 with built-in Kotlin, Kotlin/Compose co
 
 Both prerequisites gate activation of the master control; tapping it while setup is incomplete opens **Setup**. Setup can also be opened with the bare settings button at the top-right of Home. The grayscale policy is chosen with the exact **Only These** / **Except These** control above app search. Policy and selection changes apply immediately and remain selected when the policy changes. In both app lists, selected apps are pinned to the top.
 
-While enabled, the app takes exclusive control of Android Color correction. It selects monochromacy before enabling correction for grayscale and disables correction for color. Disabling management also turns Color correction off; an existing correction mode is not preserved.
+While enabled, the app takes exclusive control of Android Color correction. It selects monochromacy before enabling correction for grayscale and disables correction for color. Disabling management turns off correction that Graycie took control of; an existing correction mode is not preserved once management applies changes.
+
+Graycie only turns Color correction off during cleanup if it previously took control. Connecting, disconnecting, or snoozing the accessibility service while management is off leaves an existing correction unchanged unless Graycie still has a pending cleanup from earlier management.
 
 When snoozed, press the notification **Resume** action or the in-app **Resume** button. The notification action targets Graycie's private receiver and begins recovery directly, even while the activity is closed. Tapping the notification body only opens Graycie and does not resume. Recovery appends only Graycie's component to the current secure enabled-services list and waits for the service to reconnect. If recovery fails, snooze and its notification remain available. No timer or foreground-app change can initiate recovery.
 

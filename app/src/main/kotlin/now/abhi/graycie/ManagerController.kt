@@ -87,11 +87,18 @@ class ManagerController private constructor(private val context: Context) : Mana
             lastAppliedGrayscale = if (preferences.contains("lastAppliedGrayscale"))
                 preferences.getBoolean("lastAppliedGrayscale", false) else null,
             error = preferences.getString("error", null),
+            // Older versions only recorded the applied value. A recorded grayscale
+            // application is enough evidence to retain cleanup responsibility.
+            ownsColorCorrection = preferences.getBoolean("ownsColorCorrection",
+                preferences.getBoolean("lastAppliedGrayscale", false)),
         )
 
         override fun write(state: ManagerState) {
+            val ownershipChanged = state.ownsColorCorrection !=
+                preferences.getBoolean("ownsColorCorrection", false)
             preferences.edit().apply {
                 putBoolean("managerEnabled", state.managerEnabled)
+                putBoolean("ownsColorCorrection", state.ownsColorCorrection)
                 putString("policy", state.policy.name)
                 putStringSet("selectedPackages", state.selectedPackages.toSet())
                 putStringSet("snoozePackages", state.snoozePackages.toSet())
@@ -100,7 +107,10 @@ class ManagerController private constructor(private val context: Context) : Mana
                 putString("error", state.error)
                 state.lastAppliedGrayscale?.let { putBoolean("lastAppliedGrayscale", it) }
                     ?: remove("lastAppliedGrayscale")
-            }.apply()
+            }.let { editor ->
+                // Ownership must survive a process restart around secure-setting writes.
+                if (ownershipChanged) editor.commit() else editor.apply()
+            }
         }
     }, settings, ::isServiceEnabled, ::publishState)
 
