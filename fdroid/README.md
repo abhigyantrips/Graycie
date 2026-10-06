@@ -8,7 +8,7 @@ F-Droid imports from the tagged source tree.
 Before submitting:
 
 1. Make `https://github.com/abhigyantrips/Graycie` publicly accessible.
-2. Commit the complete readiness changes and tag that commit `v1.2.0`.
+2. Commit the complete 1.3.0 release changes and tag that commit `v1.3.0`, matching the new build entry in the YAML file.
 3. Verify the tag from a clean clone, including the unsigned release APK.
 4. Copy the YAML file into `fdroiddata/metadata/` and run `fdroid lint`,
    `fdroid checkupdates`, `fdroid scanner`, and an isolated `fdroid build`.

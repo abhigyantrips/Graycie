@@ -1,0 +1,7 @@
+• Auto-snooze and Open safely work while Graycie is OFF.
+• Recovery keeps the prior ON/OFF state; the switch is locked while snoozed.
+• Existing Color correction stays unchanged while Graycie is OFF.
+• Saved correction is restored on stop or snooze, including after restart.
+• Color apps use the saved non-grayscale correction.
+• Newer manual correction changes are preserved.
+• Added uninstall recovery instructions.

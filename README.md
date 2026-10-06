@@ -30,7 +30,7 @@ Requirements are JDK 17 and an Android SDK with API 37 installed. Set only `sdk.
 ./gradlew :app:installDebug
 ```
 
-The project uses Gradle 9.3.1, AGP 9.1.1 with built-in Kotlin, Kotlin/Compose compiler plugin 2.4.0, Compose BOM 2026.08.00, `compileSdk 37`, `targetSdk 36`, and `minSdk 26`. Release APKs are intentionally unsigned; F-Droid applies its own signing key. Version 1.2.0 has version code 3.
+The project uses Gradle 9.3.1, AGP 9.1.1 with built-in Kotlin, Kotlin/Compose compiler plugin 2.4.0, Compose BOM 2026.08.00, `compileSdk 37`, `targetSdk 36`, and `minSdk 26`. Release APKs are intentionally unsigned; F-Droid applies its own signing key. Version 1.3.0 has version code 4.
 
 ## Device setup
 
