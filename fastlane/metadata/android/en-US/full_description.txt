@@ -36,3 +36,9 @@ Important setup and privacy details:
 While management is on, Graycie keeps its own interface in color. Home and
 launcher-hosted Overview remain grayscale, and the current Home app cannot
 be selected.
+
+Before uninstalling, turn Graycie OFF to restore your previous Color correction.
+If the screen stays grayscale after uninstalling, open Android Settings →
+Accessibility → Color correction and turn Color correction OFF. If you use
+correction for color blindness, select your preferred mode there instead.
+If you cannot find this setting, search Android Settings for “Color correction”.

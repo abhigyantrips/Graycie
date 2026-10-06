@@ -51,6 +51,8 @@ While enabled, the app temporarily controls Android Color correction. It selects
 
 Graycie only restores Color correction during cleanup if it previously took control. Connecting, disconnecting, or snoozing the accessibility service while management is off leaves an existing correction unchanged unless Graycie still has a pending cleanup from earlier management. Older builds did not save previous correction settings; an already-active session from those builds can only have its grayscale disabled.
 
+**Before uninstalling, turn Graycie OFF** to restore your previous Color correction. If the screen stays grayscale after uninstalling, open **Android Settings → Accessibility → Color correction** and turn Color correction **OFF**. If you use correction for color blindness, select your preferred mode there instead. If you cannot find this setting, search Android Settings for **Color correction**.
+
 When snoozed, press the notification **Resume** action or the in-app **Resume** button. The notification action targets Graycie's private receiver and begins recovery directly, even while the activity is closed. Tapping the notification body only opens Graycie and does not resume. Recovery appends only Graycie's component to the current secure enabled-services list and waits for the service to reconnect. If recovery fails, snooze and its notification remain available. No timer or foreground-app change can initiate recovery.
 
 ## Architecture
