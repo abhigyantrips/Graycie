@@ -23,11 +23,16 @@ class OffStateColorCorrectionTest {
             values[key] = value
             return true
         }
+        override fun clear(key: String): Boolean {
+            values.remove(key)
+            return true
+        }
     }
 
     private val store = Store()
     private val access = Access()
-    private fun engine() = PolicyEngine("manager", store, SecureGrayscaleSettings(access), { true })
+    private val sessions = TestCorrectionSessionStore()
+    private fun engine() = PolicyEngine("manager", store, SecureGrayscaleSettings(access, sessions), { true })
 
     @Test fun existingCorrectionSurvivesOffStateConnectionsEventsAndDisconnects() {
         repeat(2) {
@@ -65,7 +70,8 @@ class OffStateColorCorrectionTest {
         assertEquals(0, access.values[SecureGrayscaleSettings.MODE])
         assertEquals(1, access.values[SecureGrayscaleSettings.ENABLED])
         engine.setEnabled(false)
-        assertEquals(0, access.values[SecureGrayscaleSettings.ENABLED])
+        assertEquals(12, access.values[SecureGrayscaleSettings.MODE])
+        assertEquals(1, access.values[SecureGrayscaleSettings.ENABLED])
 
         access.values[SecureGrayscaleSettings.MODE] = 12
         access.values[SecureGrayscaleSettings.ENABLED] = 1
@@ -73,6 +79,84 @@ class OffStateColorCorrectionTest {
         engine.onDisconnected()
         engine().onConnected()
         assertExistingCorrectionUntouched()
+    }
+
+    @Test fun previousCorrectionIsRestoredAfterManagedProcessRestartAndDisconnect() {
+        val engine = engine()
+        engine.setSelected(setOf("selected"))
+        engine.setEnabled(true)
+        engine.onForeground("selected", true)
+        val restarted = engine()
+        restarted.onConnected()
+        restarted.onForeground("other", true)
+        restarted.onForeground("selected", true)
+        restarted.onDisconnected()
+        assertEquals(12, access.values[SecureGrayscaleSettings.MODE])
+        assertEquals(1, access.values[SecureGrayscaleSettings.ENABLED])
+        assertFalse(store.state.ownsColorCorrection)
+        assertFalse(store.state.managerEnabled)
+    }
+
+    @Test fun snoozeRestoresCorrectionAndResumeCanManageAColorAppAgain() {
+        val engine = engine()
+        engine.setSelected(setOf("selected"))
+        engine.setSnoozePackages(setOf("bank"))
+        engine.setEnabled(true)
+        engine.onForeground("other", true)
+        assertTrue(engine.prepareSnooze("bank"))
+        assertTrue(engine.restoreColorForSnooze())
+        assertEquals(12, access.values[SecureGrayscaleSettings.MODE])
+        assertEquals(1, access.values[SecureGrayscaleSettings.ENABLED])
+
+        engine.onDisconnected()
+        val restarted = engine()
+        restarted.completeResume()
+        restarted.onConnected()
+        restarted.onForeground("other", true)
+        assertEquals(12, access.values[SecureGrayscaleSettings.MODE])
+        assertEquals(1, access.values[SecureGrayscaleSettings.ENABLED])
+        assertTrue(restarted.state.ownsColorCorrection)
+        restarted.setEnabled(false)
+        assertEquals(12, access.values[SecureGrayscaleSettings.MODE])
+        assertEquals(1, access.values[SecureGrayscaleSettings.ENABLED])
+    }
+
+    @Test fun newerManualCorrectionIsPreservedWhenManagerStops() {
+        val engine = engine()
+        engine.setSelected(setOf("selected"))
+        engine.setEnabled(true)
+        engine.onForeground("selected", true)
+        access.values[SecureGrayscaleSettings.MODE] = 13
+        access.writes.clear()
+        engine.setEnabled(false)
+        assertEquals(13, access.values[SecureGrayscaleSettings.MODE])
+        assertEquals(1, access.values[SecureGrayscaleSettings.ENABLED])
+        assertTrue(access.writes.isEmpty())
+        assertFalse(store.state.ownsColorCorrection)
+    }
+
+    @Test fun bothPoliciesAndOwnInterfaceUseSavedCorrectionForColorDestinations() {
+        for (policy in Policy.entries) {
+            val engine = engine()
+            engine.setSelected(setOf("selected"))
+            engine.setPolicy(policy)
+            engine.setEnabled(true)
+            val grayscaleApp = if (policy == Policy.ONLY_SELECTED) "selected" else "other"
+            val colorApp = if (policy == Policy.ONLY_SELECTED) "other" else "selected"
+            engine.onForeground(grayscaleApp, true)
+            assertEquals(0, access.values[SecureGrayscaleSettings.MODE])
+            assertEquals(1, access.values[SecureGrayscaleSettings.ENABLED])
+
+            engine.onForeground(colorApp, true)
+            assertEquals(12, access.values[SecureGrayscaleSettings.MODE])
+            assertEquals(1, access.values[SecureGrayscaleSettings.ENABLED])
+            engine.onHome("launcher")
+            assertEquals(0, access.values[SecureGrayscaleSettings.MODE])
+            engine.onForeground("manager", true)
+            assertEquals(12, access.values[SecureGrayscaleSettings.MODE])
+            assertEquals(1, access.values[SecureGrayscaleSettings.ENABLED])
+            engine.setEnabled(false)
+        }
     }
 
     private fun assertExistingCorrectionUntouched() {

@@ -6,7 +6,6 @@ Categories:
 License: GPL-3.0-or-later
 AuthorName: Abhigyan Trips
 AuthorWebSite: https://abhi.now
-WebSite: https://github.com/abhigyantrips/Graycie
 SourceCode: https://github.com/abhigyantrips/Graycie
 IssueTracker: https://github.com/abhigyantrips/Graycie/issues
 Changelog: https://github.com/abhigyantrips/Graycie/releases
@@ -19,15 +18,12 @@ Repo: https://github.com/abhigyantrips/Graycie.git
 Builds:
   - versionName: 1.2.0
     versionCode: 3
-    commit: v1.2.0
+    commit: 5f65ce67a672144d0552c29df3d51121b004d84d
     subdir: app
     gradle:
       - yes
-    antifeatures:
-      NonFreeAssets:
-        en-US: Chat Favour font and derived icon forbid modifications.
 
-AutoUpdateMode: Version %v
+AutoUpdateMode: Version
 UpdateCheckMode: Tags
 CurrentVersion: 1.2.0
 CurrentVersionCode: 3

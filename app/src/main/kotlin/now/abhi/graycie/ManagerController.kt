@@ -61,12 +61,16 @@ class ManagerController private constructor(private val context: Context) : Mana
             Settings.Secure.getString(context.contentResolver, key)?.toIntOrNull()
         override fun writeInt(key: String, value: Int) =
             Settings.Secure.putInt(context.contentResolver, key, value)
+        override fun clear(key: String) =
+            Settings.Secure.putString(context.contentResolver, key, null)
         override fun readString(key: String): String? =
             Settings.Secure.getString(context.contentResolver, key)
         override fun writeString(key: String, value: String) =
             Settings.Secure.putString(context.contentResolver, key, value)
     }
-    private val settings = SecureGrayscaleSettings(secureAccess)
+    private val settings = SecureGrayscaleSettings(secureAccess, PreferencesCorrectionSessionStore(
+        context.getSharedPreferences("color_correction_recovery", Context.MODE_PRIVATE)
+    ))
     private val accessibilitySettings = SecureAccessibilitySettings(
         ComponentName(context, ForegroundAccessibilityService::class.java), secureAccess
     )

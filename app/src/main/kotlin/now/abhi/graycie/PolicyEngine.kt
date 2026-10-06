@@ -25,7 +25,7 @@ interface GrayscaleSettings {
     fun hasPermission(): Boolean
     /** Return false when the provider refuses a write; may throw SecurityException. */
     fun setGrayscale(enabled: Boolean): Boolean
-    /** Stop management and leave Color correction disabled. */
+    /** Stop management and restore saved correction, preserving a newer manual choice. */
     fun release(): Boolean
 }
 
@@ -104,10 +104,10 @@ class PolicyEngine(
             if (!settings.hasPermission()) throw SecurityException("Permission missing")
             if (!settings.release()) {
                 save(state.copy(lastAppliedGrayscale = null,
-                    error = "Color could not be restored before snoozing. Turn Color correction off in Android settings."))
+                    error = "Previous Color correction could not be restored before snoozing. Check Android Color correction settings."))
                 false
             } else {
-                save(state.copy(lastAppliedGrayscale = false, ownsColorCorrection = false, error = null))
+                save(state.copy(lastAppliedGrayscale = null, ownsColorCorrection = false, error = null))
                 true
             }
         } catch (_: SecurityException) {
@@ -115,7 +115,7 @@ class PolicyEngine(
             false
         } catch (_: RuntimeException) {
             save(state.copy(lastAppliedGrayscale = null,
-                error = "Color could not be restored before snoozing. Turn Color correction off in Android settings."))
+                error = "Previous Color correction could not be restored before snoozing. Check Android Color correction settings."))
             false
         }
     }
@@ -213,15 +213,15 @@ class PolicyEngine(
         try {
             if (!settings.hasPermission()) throw SecurityException("Permission missing")
             if (!settings.release()) {
-                failChange("Android refused to turn Color correction off. Turn it off in Android settings.",
+                failChange("Android refused to restore previous Color correction. Check Android Color correction settings.",
                     cleanup = false)
                 return
             }
-            save(state.copy(lastAppliedGrayscale = false, ownsColorCorrection = false, error = null))
+            save(state.copy(lastAppliedGrayscale = null, ownsColorCorrection = false, error = null))
         } catch (_: SecurityException) {
             failChange(PERMISSION_ERROR, cleanup = false)
         } catch (_: RuntimeException) {
-            failChange("Could not turn Color correction off. Turn it off in Android settings.",
+            failChange("Could not restore previous Color correction. Check Android Color correction settings.",
                 cleanup = false)
         }
     }
@@ -232,7 +232,7 @@ class PolicyEngine(
         if (cleanup && ownsColorCorrection && settings.hasPermission()) {
             val restored = try { settings.release() } catch (_: RuntimeException) { false }
             if (restored) ownsColorCorrection = false
-            if (!restored) error += " Color correction could not be turned off; turn it off in Android settings."
+            if (!restored) error += " Previous Color correction could not be restored; check Android Color correction settings."
         }
         save(state.copy(managerEnabled = false, lastAppliedGrayscale = null,
             ownsColorCorrection = ownsColorCorrection, error = error))

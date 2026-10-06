@@ -2,15 +2,15 @@
 
 ## What the feature does
 
-Some banking and security-sensitive apps refuse to run while any Accessibility service is enabled. Auto-snooze gives users a separate, opt-in compatibility list. Opening a configured app can restore color and disable Graycie's service without turning off the user's grayscale configuration.
+Some banking and security-sensitive apps refuse to run while any Accessibility service is enabled. Auto-snooze gives users a separate, opt-in compatibility list. Opening a configured app can restore the previous Color correction and disable Graycie's service without turning off the user's grayscale configuration.
 
 The grayscale and Auto-snooze selections are independent. Graycie and the active Home app cannot be selected for snoozing and cannot trigger it.
 
 ## Automatic snooze and Open safely
 
-Automatic detection checks window-state events before normal foreground debouncing. If Graycie's Accessibility service is enabled, the package is selected, and recovery notifications are available, Graycie posts recovery, restores color, and calls Android's `disableSelf()` API. Auto-snooze remains active when grayscale management is switched off. Detection is best-effort because the target app may check Accessibility before Graycie receives its event.
+Automatic detection checks window-state events before normal foreground debouncing. If Graycie's Accessibility service is enabled, the package is selected, and recovery notifications are available, Graycie posts recovery, restores the previous Color correction, and calls Android's `disableSelf()` API. Auto-snooze remains active when grayscale management is switched off. Detection is best-effort because the target app may check Accessibility before Graycie receives its event.
 
-**Open safely** is the deterministic entry path. Graycie prepares recovery, restores color, removes only its own component from the current enabled-services setting, confirms that it is gone, and only then launches the selected app. If removal cannot be confirmed, the launch is aborted.
+**Open safely** is the deterministic entry path. Graycie prepares recovery, restores the previous Color correction, removes only its own component from the current enabled-services setting, confirms that it is gone, and only then launches the selected app. If removal cannot be confirmed, the launch is aborted.
 
 Once snoozing begins, duplicate events and service disconnect callbacks keep the same recovery state and do not repeat cleanup.
 

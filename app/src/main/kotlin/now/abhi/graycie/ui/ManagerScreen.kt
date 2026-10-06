@@ -1162,7 +1162,7 @@ private fun SetupScreen(
                 }
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    "While enabled, Graycie switches Android Color correction between monochromacy and off. It replaces any existing correction mode. Your selections and app activity remain on this device.",
+                    "While enabled, Graycie temporarily controls Android Color correction. Color apps use your previous non-grayscale correction. Your previous settings return when management stops or snoozes, and newer manual changes are kept. Your selections and app activity remain on this device.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFD8EBFF),
                 )

@@ -13,9 +13,11 @@ Two policies are available:
 - **Only selected apps:** selected apps are grayscale and other apps are color.
 - **Except selected apps:** selected apps are color and other apps are grayscale.
 
-Graycie itself always stays in color. Home and launcher-hosted Overview stay grayscale, and the active Home app cannot be selected.
+"Color" keeps the user's saved non-grayscale Color correction and its on/off state. If the saved mode is grayscale, color apps disable correction instead, so the two policy destinations remain distinct.
 
-Opt-in **Auto-snooze** supports apps, such as banking apps, that refuse to run while an accessibility service is enabled. Automatic detection restores color, leaves an ongoing recovery notification, and calls Android's `disableSelf()`. **Open safely** is the reliable path: it disables and confirms accessibility before launching the selected app. Management stays logically enabled until the user explicitly resumes or turns it off.
+While management is on, Graycie itself stays in color and Home and launcher-hosted Overview stay grayscale. The active Home app cannot be selected.
+
+Opt-in **Auto-snooze** supports apps, such as banking apps, that refuse to run while an accessibility service is enabled. Automatic detection restores the previous Color correction, leaves an ongoing recovery notification, and calls Android's `disableSelf()`. **Open safely** is the reliable path: it disables and confirms accessibility before launching the selected app. Management stays logically enabled until the user explicitly resumes or turns it off.
 
 The app identity is `now.abhi.graycie`. It is intentionally distinct from the former `dev.grayscale.manager` application: uninstall or disable the old app first, install Graycie, grant secure settings again, re-enable accessibility, and configure selections again. Preferences and grants do not transfer between application IDs.
 
@@ -45,9 +47,9 @@ The project uses Gradle 9.3.1, AGP 9.1.1 with built-in Kotlin, Kotlin/Compose co
 
 Both prerequisites gate activation of the master control; tapping it while setup is incomplete opens **Setup**. Setup can also be opened with the bare settings button at the top-right of Home. The grayscale policy is chosen with the exact **Only These** / **Except These** control above app search. Policy and selection changes apply immediately and remain selected when the policy changes. In both app lists, selected apps are pinned to the top.
 
-While enabled, the app takes exclusive control of Android Color correction. It selects monochromacy before enabling correction for grayscale and disables correction for color. Disabling management turns off correction that Graycie took control of; an existing correction mode is not preserved once management applies changes.
+While enabled, the app temporarily controls Android Color correction. It selects monochromacy before enabling correction for grayscale and uses the saved non-grayscale correction for color apps. Before its first setting change, Graycie saves the existing mode and on/off state. Stopping management, disconnecting the service, or snoozing restores those settings, including a previously enabled grayscale mode. A newer manual correction is preserved instead of overwritten. The backup survives process restarts and failed restoration attempts.
 
-Graycie only turns Color correction off during cleanup if it previously took control. Connecting, disconnecting, or snoozing the accessibility service while management is off leaves an existing correction unchanged unless Graycie still has a pending cleanup from earlier management.
+Graycie only restores Color correction during cleanup if it previously took control. Connecting, disconnecting, or snoozing the accessibility service while management is off leaves an existing correction unchanged unless Graycie still has a pending cleanup from earlier management. Older builds did not save previous correction settings; an already-active session from those builds can only have its grayscale disabled.
 
 When snoozed, press the notification **Resume** action or the in-app **Resume** button. The notification action targets Graycie's private receiver and begins recovery directly, even while the activity is closed. Tapping the notification body only opens Graycie and does not resume. Recovery appends only Graycie's component to the current secure enabled-services list and waits for the service to reconnect. If recovery fails, snooze and its notification remain available. No timer or foreground-app change can initiate recovery.
 

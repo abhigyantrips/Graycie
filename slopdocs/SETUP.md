@@ -17,9 +17,9 @@ The app rechecks both prerequisites when it resumes and when the user asks it to
 
 ## Color correction ownership
 
-While management is active, Graycie controls Android's Color correction setting directly. To apply grayscale it selects monochromacy first and then enables Color correction. To restore color it disables Color correction. Values that are already correct are not rewritten.
+While management is active, Graycie controls Android's Color correction setting directly. To apply grayscale it selects monochromacy first and then enables Color correction. Color destinations use the saved non-grayscale mode and its saved on/off state, so an existing correction for color blindness stays available. If the saved mode is grayscale, color destinations disable correction instead. Changing from grayscale to another correction disables correction before switching modes and then restores the saved on/off state. Values that are already correct are not rewritten.
 
-Turning management off performs the same color cleanup. Graycie does not save and restore a correction mode that existed before it was enabled.
+Before changing correction, Graycie durably saves the existing mode and on/off state. Turning management off, disconnecting the service, or snoozing restores the saved settings. A newer manual correction is preserved. The saved values and pending writes survive process restarts and failed restoration attempts. A session inherited from an older build has no original backup; cleanup can only disable its recognizable grayscale.
 
 If the secure-settings grant is missing, Android refuses a provider write, or another provider error occurs, Graycie disables normal management, attempts a safe color cleanup where possible, and shows an actionable error. Both prerequisites must be present before management can start again.
 

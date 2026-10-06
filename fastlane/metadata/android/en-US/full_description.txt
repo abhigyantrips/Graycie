@@ -6,6 +6,9 @@ Choose one of two policies:
 • Only selected apps: selected apps are grayscale; everything else stays in color.
 • Except selected apps: selected apps stay in color; everything else is grayscale.
 
+Color apps keep your saved correction for color blindness and its on/off state.
+If your saved correction is grayscale, color apps turn correction off instead.
+
 Graycie also includes optional auto-snooze support for banking and other
 security-sensitive apps that refuse to run while an accessibility service is
 enabled. “Open safely” disables Graycie's accessibility service before opening
@@ -26,6 +29,10 @@ Important setup and privacy details:
   account, ads, cloud service, or telemetry.
 • An ongoing local notification is shown while accessibility is snoozed so you
   can return to Graycie and resume it.
+• While management is on, Graycie temporarily overrides Android Color
+  correction. It saves the previous mode and on/off state and restores them
+  when management stops or snoozes. A newer manual correction is kept.
 
-Graycie always keeps its own interface in color. Home and launcher-hosted
-Overview remain grayscale, and the current Home app cannot be selected.
+While management is on, Graycie keeps its own interface in color. Home and
+launcher-hosted Overview remain grayscale, and the current Home app cannot
+be selected.

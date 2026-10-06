@@ -26,7 +26,7 @@ adb shell settings get secure accessibility_display_daltonizer
 adb shell settings get secure accessibility_display_daltonizer_enabled
 ```
 
-Grayscale must report mode `0` and enabled `1`; color must report enabled `0`. Master-off and service cleanup must also report enabled `0` when Graycie previously took control. With management off and no pending cleanup, existing Color correction must remain unchanged.
+Grayscale must report mode `0` and enabled `1`. Color destinations must use the saved non-grayscale mode and enabled state; if the saved mode is grayscale, color must report enabled `0`. Master-off, service cleanup, and snooze must restore the saved mode and enabled state when Graycie previously took control, unless a newer manual correction exists. With management off and no pending cleanup, existing Color correction must remain unchanged.
 
 | Scenario | Expected |
 | --- | --- |
@@ -34,6 +34,11 @@ Grayscale must report mode `0` and enabled `1`; color must report enabled `0`. M
 | Existing Color correction enabled, Graycie master off | Enabling, reconnecting, or disabling Graycie's accessibility service preserves the original mode and enabled state |
 | Existing Color correction enabled, auto-snooze while master off | Automatic snooze, Open safely, and recovery preserve the original correction |
 | Correction manually enabled after Graycie is turned off | Subsequent service disconnect/reconnect leaves it unchanged |
+| Non-grayscale correction enabled before management | Color apps and Graycie itself use the saved correction in both policies; grayscale apps and Home still use monochromacy |
+| Grayscale enabled before management | Color apps disable correction; stopping or snoozing restores the original grayscale |
+| Non-grayscale correction selected but disabled before management | Color apps restore its mode with correction still disabled |
+| Existing enabled or disabled correction, Graycie stops or snoozes | Original mode and on/off state return, including after process restart |
+| User changes correction during management | Cleanup keeps the newer manual correction |
 | Graycie cleanup fails, then process restarts | Cleanup responsibility survives; reconnect retries cleanup once permission/provider access returns |
 | Selected ↔ unselected | Color follows both policy modes without repeated duplicate writes |
 | Manager | Always color and non-selectable |
@@ -56,7 +61,7 @@ Grayscale must report mode `0` and enabled `1`; color must report enabled `0`. M
 | Large text / narrow screen | All content remains scrollable and controls remain usable |
 | First snooze selection on API 33+ | Permission prompt appears; denial does not save the selection |
 | Notifications/channel disabled | Snooze refuses to disable accessibility and shows a warning |
-| Automatic configured-app open while manager is on | Recovery posts with **Grant & Re-enable**, color restores, then accessibility disables best-effort |
+| Automatic configured-app open while manager is on | Recovery posts with **Grant & Re-enable**, previous correction restores, then accessibility disables best-effort |
 | Automatic configured-app open while manager is off | Recovery still posts with **Grant Permission**, then accessibility disables best-effort |
 | Duplicate window/lifecycle events | One notification/cleanup; master remains enabled and snoozed |
 | Open safely | Accessibility is confirmed absent before the banking activity starts |

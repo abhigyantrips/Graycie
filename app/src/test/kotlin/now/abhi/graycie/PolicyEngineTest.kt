@@ -285,7 +285,7 @@ class PolicyEngineTest {
         settings.releaseAccepts = false
         engine.onForeground("selected", true)
         assertEquals(1, settings.releases)
-        assertTrue(engine.state.error!!.contains("could not be turned off"))
+        assertTrue(engine.state.error!!.contains("could not be restored"))
         assertNull(engine.state.lastAppliedGrayscale)
         engine.onForeground("other", true)
         assertEquals(1, settings.releases)
