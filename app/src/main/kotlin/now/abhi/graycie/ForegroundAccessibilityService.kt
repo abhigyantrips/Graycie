@@ -32,7 +32,7 @@ class ForegroundAccessibilityService : AccessibilityService() {
     }
 
     private fun refreshPackages() {
-        launchablePackages = AppCatalog(this).apps().map { it.packageName }.toSet()
+        launchablePackages = AppCatalog(this).packageNames() + packageName
         homePackages = controller.activeHomePackages()
     }
 
@@ -73,7 +73,7 @@ class ForegroundAccessibilityService : AccessibilityService() {
         val elapsed = (SystemClock.uptimeMillis() - transitionStartedAt).coerceAtLeast(0)
         val classification = classifier.classify(
             windows = windows.map { it.toMetadata() },
-            launchablePackages = launchablePackages + packageName,
+            launchablePackages = launchablePackages,
             homePackages = homePackages,
             retryExpired = stabilizer.retryExpired(elapsed),
         )

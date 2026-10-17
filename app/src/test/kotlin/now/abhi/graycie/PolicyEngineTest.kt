@@ -320,4 +320,11 @@ class PolicyEngineTest {
         assertNull(engine.state.lastAppliedGrayscale)
         assertTrue(engine.state.error!!.contains("permission"))
     }
+
+    @Test fun autoSnoozeCandidatesAreConfiguredAppsWithoutPendingSnooze() {
+        val configured = ManagerState(snoozePackages = setOf("bank"))
+        assertTrue(configured.isAutoSnoozeCandidate("bank"))
+        assertFalse(configured.isAutoSnoozeCandidate("browser"))
+        assertFalse(configured.copy(snoozedForPackage = "bank").isAutoSnoozeCandidate("bank"))
+    }
 }

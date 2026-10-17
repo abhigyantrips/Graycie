@@ -181,6 +181,9 @@ class ManagerController private constructor(private val context: Context) : Mana
 
     fun automaticSnooze(packageName: String, disableSelf: () -> Unit): Boolean {
         check(Looper.myLooper() == Looper.getMainLooper())
+        // Window events are frequent, so non-candidates are rejected with the in-memory
+        // sets before any Home, permission, accessibility, or notification lookup.
+        if (!engine.state.isAutoSnoozeCandidate(packageName)) return false
         if (packageName == context.packageName || packageName in activeHomePackages()) return false
         return snooze.automatic(packageName, disableSelf).also { publishState() }
     }
@@ -210,7 +213,8 @@ class ManagerController private constructor(private val context: Context) : Mana
     fun publishState() {
         check(Looper.myLooper() == Looper.getMainLooper()) { "Controller state must be published on main" }
         val state = engine.state
-        val snoozePackages = state.snoozePackages - activeHomePackages() - context.packageName
+        val home = activeHomePackages()
+        val snoozePackages = state.snoozePackages - home - context.packageName
         val status = transitionStatus ?: when {
             state.snoozedForPackage != null -> ManagerStatus.SNOOZED
             state.managerEnabled -> ManagerStatus.ACTIVE
@@ -222,7 +226,7 @@ class ManagerController private constructor(private val context: Context) : Mana
             serviceEnabled = isServiceEnabled(),
             managerEnabled = state.managerEnabled,
             policy = state.policy,
-            selectedPackages = state.selectedPackages - activeHomePackages(),
+            selectedPackages = state.selectedPackages - home,
             snoozePackages = snoozePackages,
             snoozedForPackage = state.snoozedForPackage,
             status = status,

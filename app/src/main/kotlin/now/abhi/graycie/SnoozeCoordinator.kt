@@ -21,8 +21,7 @@ class SnoozeCoordinator(
     private val phaseChanged: (ManagerStatus) -> Unit,
 ) {
     fun automatic(packageName: String, disableSelf: () -> Unit): Boolean {
-        if (packageName !in engine.state.snoozePackages ||
-            engine.state.snoozedForPackage != null) return false
+        if (!engine.state.isAutoSnoozeCandidate(packageName)) return false
         if (!notifications.isReady()) {
             engine.reportError(NOTIFICATION_ERROR)
             return false

@@ -17,21 +17,19 @@ class AppCatalog(private val context: Context) {
         val icon: () -> Drawable,
     )
 
+    private val homeIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+
     @Suppress("DEPRECATION") // This overload supports API 26 as well as current Android.
     fun apps(): List<App> {
-        val launcherApps = context.getSystemService(LauncherApps::class.java)
-        val drawer = launcherApps.getActivityList(null, Process.myUserHandle()).map { app ->
+        val drawer = drawerActivities().map { app ->
             App(app.componentName.packageName, appLabel(app.componentName.packageName, app.label), false) {
                 app.getIcon(context.resources.displayMetrics.densityDpi)
             }
         }
-        val homeIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
         val activeHome = context.packageManager.resolveActivity(
             homeIntent, PackageManager.MATCH_DEFAULT_ONLY
         )?.activityInfo?.packageName
-        val homes = context.packageManager.queryIntentActivities(
-            homeIntent, 0
-        ).map { home ->
+        val homes = homeActivities().map { home ->
             App(
                 home.activityInfo.packageName,
                 appLabel(home.activityInfo.packageName, home.loadLabel(context.packageManager)),
@@ -44,6 +42,18 @@ class AppCatalog(private val context: Context) {
         return (homes + drawer).distinctBy { it.packageName }
             .sortedWith { a, b -> collator.compare(a.label, b.label) }
     }
+
+    /** The launchable set of [apps] without loading any label or icon. */
+    fun packageNames(): Set<String> =
+        (drawerActivities().map { it.componentName.packageName } +
+            homeActivities().map { it.activityInfo.packageName }).toSet()
+
+    @Suppress("DEPRECATION") // This overload supports API 26 as well as current Android.
+    private fun drawerActivities() =
+        context.getSystemService(LauncherApps::class.java).getActivityList(null, Process.myUserHandle())
+
+    private fun homeActivities() =
+        context.packageManager.queryIntentActivities(homeIntent, 0)
 
     private fun appLabel(packageName: String, label: CharSequence?): String {
         if (packageName == ANDROID_SETTINGS_PACKAGE) return "Settings"

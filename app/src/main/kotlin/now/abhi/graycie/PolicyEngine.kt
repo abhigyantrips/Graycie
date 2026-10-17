@@ -16,6 +16,10 @@ data class ManagerState(
     val ownsColorCorrection: Boolean = false,
 )
 
+/** A configured app can trigger an automatic snooze only while none is pending. */
+internal fun ManagerState.isAutoSnoozeCandidate(packageName: String): Boolean =
+    snoozedForPackage == null && packageName in snoozePackages
+
 interface StateStore {
     fun read(): ManagerState
     fun write(state: ManagerState)
